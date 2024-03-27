@@ -141,7 +141,7 @@ static esp_err_t sip_send_chip_init(struct esp_sip *sip)
     return esp_sip_send_cmd(SIP_CMD_INIT, sizeof(esp_init_data), (void *)&init_data);
 }
 
-uint8_t *esp_sip_get_mac(void)
+uint8_t *esp_extconn_get_mac(void)
 {
     if (sip != NULL) {
         ESP_LOGI(TAG, "%s %x:%x:%x:%x:%x:%x",

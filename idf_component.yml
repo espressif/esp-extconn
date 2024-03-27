@@ -1,6 +1,6 @@
 description: EXT CONN driver
 
-version: "0.0.0"
+version: "0.0.1"
 
 dependencies:
   # Requires i2c_master_read_from_device added in v4.4

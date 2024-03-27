@@ -63,8 +63,6 @@ uint32_t esp_sip_increase_rxseq(void);
 uint32_t esp_sip_increase_txseq(void);
 uint32_t esp_sip_get_tx_blks(void);
 
-uint8_t *esp_sip_get_mac(void);
-
 typedef esp_err_t (* sip_tx_data_t)(esf_buf *eb);
 typedef esp_err_t (* sip_tx_cmd_t)(enum sip_cmd_id cmd_id, uint32_t cmd_len, void *cmd);
 typedef int (* sip_get_coex_status)(void);
