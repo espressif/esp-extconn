@@ -115,6 +115,11 @@ typedef struct {
  */
 esp_err_t esp_extconn_init(esp_extconn_config_t *config);
 
+/**
+ * @brief Obtain the MAC address of the target chip.
+ */
+uint8_t *esp_sip_get_mac(void);
+
 #ifdef __cplusplus
 }
 #endif
