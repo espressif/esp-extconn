@@ -1,0 +1,167 @@
+menu "ESP external connectivity"
+
+    config ESP_EXT_CONN_ENABLE
+        bool
+        default y if SOC_WIRELESS_HOST_SUPPORTED
+
+    if ESP_EXT_CONN_ENABLE
+
+        config ESP_EXT_CONN_WIFI_ENABLE
+            bool "Enable the external wifi connective"
+            depends on ESP_HOST_WIFI_ENABLED
+            default y
+            help
+                Enable the WiFi external connection of other espressif chips.
+
+        config ESP_EXT_CONN_BT_ENABLE
+            bool "Enable the external bt connective"
+            depends on BT_ENABLED
+            default y
+            help
+                Enable the bluetooth external connection of other espressif chips.
+
+        menu "Tasks configuration"
+            depends on ESP_EXT_CONN_ENABLE
+
+            menu "Receive task configuration"
+
+                config ESP_EXT_CONN_RECV_TASK_STACK
+                    int "Receive task stack size"
+                    range 1024 10240
+                    default 3072
+                    help
+                        This help to set the task stack size of receive task
+
+                config ESP_EXT_CONN_RECV_TASK_PRIO
+                    int "Receive task priority"
+                    range 1 23
+                    default 23
+                    help
+                        This help to set the task priority of receive task
+
+                config ESP_EXT_CONN_RECV_TASK_CORE
+                    int "Receive task core id"
+                    range 0 1
+                    default 1
+                    help
+                        This help to select the core to run the receive task
+            endmenu
+
+            menu "WiFi send task configuration"
+                depends on ESP_EXT_CONN_WIFI_ENABLE
+
+                config ESP_EXT_CONN_WIFI_TASK_STACK
+                    int "WiFi send task stack size"
+                    range 1024 10240
+                    default 3072
+                    help
+                        This help to set the task stack size of WiFi send task
+
+                config ESP_EXT_CONN_WIFI_TASK_PRIO
+                    int "WiFi send task priority"
+                    range 1 23
+                    default 21
+                    help
+                        This help to set the task priority of WiFi send task
+
+                config ESP_EXT_CONN_WIFI_TASK_CORE
+                    int "WiFi send task core id"
+                    range 0 1
+                    default 1
+                    help
+                        This help to select the core to run the WiFi send task
+            endmenu
+
+            menu "BT send task configuration"
+                depends on ESP_EXT_CONN_BT_ENABLE
+
+                config ESP_EXT_CONN_BT_TASK_STACK
+                    int "BT send task stack size"
+                    range 1024 10240
+                    default 3072
+                    help
+                        This help to set the task stack size of BT send task
+
+                config ESP_EXT_CONN_BT_TASK_PRIO
+                    int "BT send task priority"
+                    range 1 23
+                    default 23
+                    help
+                        This help to set the task priority of BT send task
+
+                config ESP_EXT_CONN_BT_TASK_CORE
+                    int "BT send task core id"
+                    range 0 1
+                    default 1
+                    help
+                        This help to select the core to run the BT send task
+            endmenu
+
+        endmenu
+
+        choice ESP_EXT_CONN_INTERFACE
+            prompt "Connect interface"
+            depends on ESP_EXT_CONN_ENABLE
+            default ESP_EXT_CONN_VIA_SDIO
+            help
+                This helps to choose the connect interface
+
+            config ESP_EXT_CONN_VIA_SDIO
+                bool "via SDIO"
+                help
+                    Enable the connection via SDIO interface.
+        endchoice
+
+        menu "IO Configuration"
+            depends on ESP_EXT_CONN_ENABLE
+
+            config ESP_EXT_CONN_SLAVE_ENABLE_PIN
+                int "Slave enable pin"
+                default 53
+
+            config ESP_EXT_CONN_SLAVE_ENABLE_LVL
+                int "Slave enable gpio level"
+                range 0 1
+                default 1
+
+            config ESP_EXT_CONN_SLAVE_BOOT_PIN
+                int "Slave boot pin"
+                default -1
+
+            menu "SDIO Slot configuration"
+                depends on ESP_EXT_CONN_VIA_SDIO
+
+                config ESP_EXT_CONN_SDIO_SLOT
+                    int "host slot"
+                    range 0 1
+                    default 1
+
+                config ESP_EXT_CONN_SDIO_CLK_PIN
+                    int "clk"
+                    default 43
+
+                config ESP_EXT_CONN_SDIO_CMD_PIN
+                    int "cmd"
+                    default 44
+
+                config ESP_EXT_CONN_SDIO_D0_PIN
+                    int "D0"
+                    default 39
+
+                config ESP_EXT_CONN_SDIO_D1_PIN
+                    int "D1"
+                    default 40
+
+                config ESP_EXT_CONN_SDIO_D2_PIN
+                    int "D2"
+                    default 41
+
+                config ESP_EXT_CONN_SDIO_D3_PIN
+                    int "D3"
+                    default 42
+            endmenu
+        endmenu
+
+    endif # external connectivity enable
+
+endmenu

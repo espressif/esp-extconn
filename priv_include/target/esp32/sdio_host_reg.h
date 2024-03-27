@@ -1,0 +1,50 @@
+/*
+ * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#ifndef SDIO_HOST_REG_H_
+#define SDIO_HOST_REG_H_
+
+#define TX_BUFFER_MAX  (0x1000)
+#define TX_BUFFER_MASK (0xFFF)
+#define RX_BYTE_MAX    (0x100000)
+#define RX_BYTE_MASK   (0xFFFFF)
+
+#define ESP_SDIO_SEND_OFFSET        16
+
+#define ESP_SLAVE_CMD53_END_ADDR    0x1f800
+
+#define ESP32_SLCHOST_BASE          0x0
+
+#define ESP_SDIO_TOKEN_RDATA        (ESP32_SLCHOST_BASE + 0x44)
+#define ESP_SDIO_SLC1_HOST_PF       (ESP32_SLCHOST_BASE + 0x4C)
+#define ESP_SDIO_INT_RAW            (ESP32_SLCHOST_BASE + 0x50)
+#define SLCHOST_SLC0_RX_NEW_PACKET_INT_RAW     (BIT(23))
+#define ESP_SDIO_INT_RAW1           (ESP32_SLCHOST_BASE + 0x54)
+#define SLCHOST_SLC1_BT_RX_NEW_PACKET_INT_RAW  (BIT(25))
+#define SLCHOST_SLC1_WIFI_RX_NEW_PACKET_INT_RAW (BIT(23))
+#define SLCHOST_SLC1_TOHOST_BIT0_INT_RAW       (BIT(0))
+#define ESP_SDIO_INT_ST             (ESP32_SLCHOST_BASE + 0x58)
+#define ESP_SDIO_PKT_LEN            (ESP32_SLCHOST_BASE + 0x60)
+#define ESP_SDIO_STATE_W0           (ESP32_SLCHOST_BASE + 0x64)
+#define ESP_SDIO_CONFIG_W1          (ESP32_SLCHOST_BASE + 0x70)
+#define ESP_SDIO_CONFIG_W5          (ESP32_SLCHOST_BASE + 0x80)
+#define ESP_SDIO_WIN_CMD            (ESP32_SLCHOST_BASE + 0x84)
+#define ESP_SDIO_CONG_W7            (ESP32_SLCHOST_BASE + 0x8c)
+#define ESP_SDIO_SLC0_INT_CLR       (ESP32_SLCHOST_BASE + 0xD4)
+#define ESP_SDIO_SLC1_INT_CLR       (ESP32_SLCHOST_BASE + 0xD8)
+#define SLCHOST_SLC1_TOHOST_BIT0_INT_CLR       (BIT(0))
+#define ESP_SDIO_FUNC1_INT_ENA      (ESP32_SLCHOST_BASE + 0xDC)
+#define SLCHOST_FN1_GPIO_SDIO_INT_ENA          (BIT(25))
+
+#define ESP32_SLC_BASE         0x0
+
+#define ESP_SLC_CONF1_REG      (ESP32_SLC_BASE + 0x60)
+#define SLC_SLC0_TX_STITCH_EN  (BIT(5))
+#define SLC_SLC0_RX_STITCH_EN  (BIT(6))
+
+#define ESP_SLC_0_LEN_CONF_REG (ESP32_SLC_BASE + 0xE4)
+#define SLC_SLC0_TX_PACKET_LOAD_EN (BIT(24))
+
+#endif /* SDIO_HOST_REG_H_ */
