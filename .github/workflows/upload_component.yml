@@ -2,8 +2,8 @@ name: Push esp-extconn to IDF Component Registry
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - v*
 
 jobs:
   upload_components:
