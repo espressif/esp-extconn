@@ -1,0 +1,19 @@
+name: Push esp-extconn to IDF Component Registry
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  upload_components:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload esp-extconn to IDF Component Registry
+        uses: espressif/upload-components-ci-action@v1
+        with:
+          name: esp-extconn
+          namespace: "espressif"
+          api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
