@@ -16,7 +16,11 @@ if(CONFIG_ESP_EXT_CONN_ENABLE)
 
     set(priv_includes "priv_include")
 
-    set(target_include_dirs priv_include/target/esp32)
+    if(CONFIG_ESP_EXT_CONN_TARGET_ESP32C6)
+        set(target_include_dirs priv_include/target/esp32c6)
+    else()
+        set(target_include_dirs priv_include/target/esp32)
+    endif()
 endif()
 
 idf_component_register(SRCS "${srcs}"

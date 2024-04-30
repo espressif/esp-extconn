@@ -6,6 +6,20 @@ menu "ESP external connectivity"
 
     if ESP_EXT_CONN_ENABLE
 
+        choice ESP_EXT_CONN_TARGET_CHIP
+            prompt "Target Chip"
+            default ESP_EXT_CONN_TARGET_ESP32
+            help
+                This helps to choose the connect interface
+
+            config ESP_EXT_CONN_TARGET_ESP32
+                bool "target chip is esp32"
+
+            config ESP_EXT_CONN_TARGET_ESP32C6
+                bool "target chip is esp32c6"
+
+        endchoice
+
         config ESP_EXT_CONN_WIFI_ENABLE
             bool "Enable the external wifi connective"
             depends on ESP_HOST_WIFI_ENABLED
