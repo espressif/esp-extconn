@@ -79,6 +79,9 @@ ESP_STATIC_ASSERT(sizeof(esf_rx_desc_t) == 0xc, "Invalid size of esf_rx_desc_t s
 
 #define LLDESC 1
 #define ESP_MESH_SUPPORT 1
+//#define HAL_MAC_ESP32AC 
+#define HAL_MAC_ESP32AX 1
+
 typedef struct esf_buf_s {
 #ifndef ESP_SIP
     void     *pbuf;
@@ -98,8 +101,11 @@ typedef struct esf_buf_s {
     uint16_t hdr_len;
 #endif
 
+#ifdef HAL_MAC_ESP32AC
+    uint32_t data_len;
+#else
     uint16_t data_len;
-
+#endif
     int16_t  chl_freq_offset;
 
     uint8_t  type;
@@ -111,6 +117,24 @@ typedef struct esf_buf_s {
     uint32_t mesh_reserved: 15;
     uint8_t  is_header_len;
 #endif
+    
+#ifdef HAL_MAC_ESP32AX
+    uint8_t  eapol_msg_id;
+    uint16_t msdu_len;
+    uint16_t seqno:12;
+    uint16_t append_qos_null:1;
+    uint16_t entry:1;
+    uint16_t resort:1;
+    uint16_t rsvd:1;
+    uint8_t  ampdu_count;
+    bool     itwt_setup_frame;
+    bool     itwt_teardown_frame;
+#ifdef HAL_MAC_ESP32AX_ENABLE_TWT_DBG
+    uint32_t start;
+    uint32_t busy;
+    uint32_t enable;
+#endif
+#endif /* HAL_MAC_ESP32AX */
 
     void *trc;
     STAILQ_ENTRY(esf_buf_s) bqentry;
@@ -119,8 +143,12 @@ typedef struct esf_buf_s {
         esf_tx_desc_t *tx_desc;
         esf_rx_desc_t *rx_desc;
     } desc;
+
+#ifdef HAL_MAC_ESP32AX
+    bool itwt_suspend_frame;
+#endif
+
 } esf_buf_t;
-ESP_STATIC_ASSERT(sizeof(esf_buf_t) == 0x30, "Invalid size of esf_buf_t structure");
 
 #define esf_buf esf_buf_t
 
