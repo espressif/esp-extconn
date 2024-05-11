@@ -18,9 +18,9 @@ struct {                      \
 }
 
 typedef struct lldesc_s {
-    volatile uint32_t size: 12,
-             length: 12,
-             offset: 5,
+    volatile uint32_t size: 14,
+             length: 14,
+             offset: 1,
              sosf: 1,
              eof: 1,
              owner: 1;
@@ -52,7 +52,7 @@ typedef struct esf_tx_desc_t {
              antenna: 4,
              phy_lora_only: 1,
              probreq_lora: 1,
-             reserved: 1,
+             bw_ht40: 1,
              ifidx: 1,
              qid: 4,
              status: 8;
@@ -61,6 +61,31 @@ typedef struct esf_tx_desc_t {
     unsigned timestamp: 32;
 
     void *rcSched;
+    uint8_t pti;
+    uint16_t mt_time;
+    uint8_t aid;
+    uint16_t cbw20_symbols;
+    uint16_t cbw20_min_subfrm_len;
+    uint8_t cbw20_ampdu_count;
+    uint16_t cbw40_min_subfrm_len;
+    uint8_t cbw40_ampdu_count;
+    uint32_t gi_ltf_size: 2,
+             ersu_enabled: 1,
+             proto: 4,
+             dcm_max_constellation: 2,
+             hesiga_sr_value15_allowed: 1,
+             txop_duration_rts_threshold: 10,
+             need_protection: 1,
+             single: 1,
+             dcm: 1,
+             omc: 1,
+             is_qos_null: 1,
+             is_force_smpdu: 1,
+             rsvd: 6;
+    int rts_threshold;
+    bool twt_setup;
+    uint8_t itwt_fid;
+    uint64_t itwt_fid_sp_us;
 } esf_tx_desc_t;
 ESP_STATIC_ASSERT(sizeof(esf_tx_desc_t) == 0x20, "Invalid size of esf_tx_desc_t structure");
 
@@ -146,6 +171,8 @@ typedef struct esf_buf_s {
 
 #ifdef HAL_MAC_ESP32AX
     bool itwt_suspend_frame;
+    bool btwt_setup_frame;
+    bool btwt_teardown_frame;
 #endif
 
 } esf_buf_t;
