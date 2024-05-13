@@ -87,7 +87,7 @@ typedef struct esf_tx_desc_t {
     uint8_t itwt_fid;
     uint64_t itwt_fid_sp_us;
 } esf_tx_desc_t;
-ESP_STATIC_ASSERT(sizeof(esf_tx_desc_t) == 0x20, "Invalid size of esf_tx_desc_t structure");
+ESP_STATIC_ASSERT(sizeof(esf_tx_desc_t) == 72, "Invalid size of esf_tx_desc_t structure");
 
 typedef struct esf_rx_desc_t {
     unsigned flags: 12;
