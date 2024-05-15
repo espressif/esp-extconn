@@ -18,6 +18,8 @@ if(CONFIG_ESP_EXT_CONN_ENABLE)
 
     if(CONFIG_ESP_EXT_CONN_TARGET_ESP32C6)
         set(target_include_dirs priv_include/target/esp32c6)
+    elseif(CONFIG_ESP_EXT_CONN_TARGET_ESP32T2)
+        set(target_include_dirs priv_include/target/esp32t2)
     else()
         set(target_include_dirs priv_include/target/esp32)
     endif()
