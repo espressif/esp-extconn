@@ -34,7 +34,7 @@ ESP32-P4_Function_EV_Board with ESP32_Module_SDIO_Converter_Board
 
 ### Step to enable this component in an example code:
 
-1. Add this component to your project using ```idf.py add-dependency esp_extconn``` command.
+1. Add this component to your project using ```idf.py add-dependency esp-extconn``` command.
 
 2. In the main file of the example, add the following line:
     ```c
