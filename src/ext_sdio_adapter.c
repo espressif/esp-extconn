@@ -222,7 +222,11 @@ esp_err_t esp_extconn_sdio_read_reg_window(unsigned int reg_addr, uint8_t *value
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
     size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&p_tbuf, &actual_size);
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&p_tbuf, &actual_size);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     p_tbuf[0] = (reg_addr & 0x7f);
@@ -255,7 +259,11 @@ static int esp_extconn_sdio_write_reg_window(unsigned int reg_addr, uint8_t *val
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
     size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&p_tbuf, &actual_size);
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&p_tbuf, &actual_size);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     memcpy(p_tbuf, value, 4);
@@ -272,7 +280,11 @@ static esp_err_t esp_extconn_sdio_init_slave_link(void)
 {
     uint32_t *t_buf = NULL;
     size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&t_buf, &actual_size);
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&t_buf, &actual_size);
     ESP_RETURN_ON_FALSE(t_buf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     // set stitch en
@@ -303,7 +315,7 @@ static esp_err_t esp_extconn_sdio_init_slave_link(void)
 
     // Enable target interrupt
     uint32_t *val = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&val, &actual_size);
+    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&val, &actual_size);
     ESP_RETURN_ON_FALSE(val != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     extconn_sdio_read_bytes(host->card, 1, ESP_SDIO_FUNC1_INT_ENA, (uint8_t *)val, sizeof(uint32_t));

@@ -143,7 +143,11 @@ static void wifi_send_task(void *args)
     uint8_t *send_buf = NULL; //calloc(1, WIFI_SEND_BUFFER_LEN);
 
     size_t actual_size = 0;
-    ESP_ERROR_CHECK(esp_dma_calloc(1, WIFI_SEND_BUFFER_LEN, 0, (void*)&send_buf, &actual_size));
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    ESP_ERROR_CHECK(esp_dma_capable_malloc(WIFI_SEND_BUFFER_LEN, &dma_mem_info, (void*)&send_buf, &actual_size));
 
     ESP_LOGI(TAG, "WiFi Send START");
 
