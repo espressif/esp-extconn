@@ -3,23 +3,67 @@
 This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ESP chips that do not have built-in wireless capabilities. The APIs used by this component are compatible with the Wi-Fi and Bluetooth component APIs in the ESP-IDF.
 
 ## Supported Features
-
-- Wi-Fi Features:
-  - 802.11b/g/n
-  - Operating Mode: STA, SoftAP
-  - Security Mode: Open, WPA, WPA2, WPA3
-
-- BT/BLE
-  - Classic Bluetooth
-  - BLE 4.2
+<table>
+  <tr>
+    <th>Features</th>
+    <th>Supported</th>
+    <th>Sill not Supported </th>
+  </tr>
+  <tr>
+    <td>Virtual Wi-Fi interfaces</td>
+    <td>Station, SoftAP</td>
+    <td>Sniffer, Wi-Fi Aware (NAN)</td>
+  </tr>
+  <tr>
+    <td>Wi-Fi Modes</td>
+    <td>Station, SoftAP, Station/AP-coexistence mode</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Wi-Fi Protocols</td>
+    <td>802.11 b/g/n</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Wi-Fi Security Modes</td>
+    <td>Open / WPA / WPA2 / WPA3 / WPA2-Enterprise / WPA3-Enterprise / WPS</td>
+    <td>WAPI / DPP</td>
+  </tr>
+  <tr>
+    <td>Power Save</td>
+    <td></td>
+    <td>Modem-sleep</td>
+  </tr>
+  <tr>
+    <td>Wi-Fi Data Transmission</td>
+    <td>AMSDU, AMPDU, HT40, QoS</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Vendor Features</td>
+    <td></td>
+    <td>ESP-NOW, Long Range mode, SmartConfig, Channel State Information</td>
+  </tr>
+  <tr>
+    <td>Scan</td>
+    <td>Fast scan, All-channel scan</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Antennas</td>
+    <td></td>
+    <td>Multiple</td>
+  </tr>
+  <tr>
+    <td>Bluetooth features</td>
+    <td>Classic Bluetooth, BLE 4.2</td>
+    <td></td>
+  </tr>
+</table>
 
 ## Supported ESP Chips
-
-| Supported Hosts | ESP32P4 | 
-| ----------------- | ----- |
-
-| Supported Targets | ESP8689 | 
-| ----------------- | ------- |
+*  Supported Host : **ESP32P4**
+*  Supported Target : **ESP8689**
 
 ## Supported Boards
 
@@ -39,36 +83,104 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
     * Wi-Fi and Bluetooth, traffic for both runs over SDIO
 
 ## Supported APIs
-1. **Initialization** 
-   *  esp_wifi_init
-   *  esp_wifi_deinit
-   *  esp_wifi_start
-   *  esp_wifi_stop
-2. **Configuration**
-    * esp_wifi_set_mode
-    * esp_wifi_get_mode
-    * esp_wifi_set_config
-    * esp_wifi_get_config
-    * esp_wifi_set_storage
-    * esp_wifi_set_protocol
-    * esp_wifi_get_protocol
-    * esp_wifi_set_country
-    * esp_wifi_get_country
-    * esp_wifi_set_country_code
-    * esp_wifi_get_country_code
-    * esp_wifi_set_bandwidth
-    * esp_wifi_get_bandwidth
-    * esp_wifi_set_channel
-    * esp_wifi_get_channel
-    * esp_wifi_get_mac
-3. **Connection**
-    * esp_wifi_connect
-    * esp_wifi_disconnect
-4. **Scan**
-    * esp_wifi_scan_start
-    * esp_wifi_scan_get_ap_num
-    * esp_wifi_scan_get_ap_records
-    * esp_wifi_sta_get_ap_info
+<table>
+  <tr>
+    <th>Classification</th>
+    <th>Supported APIs</th>
+  </tr>
+  <tr>
+    <td rowspan="2">Initialization</td>
+    <td>esp_wifi_<b>init</b> / esp_wifi_<b>deinit</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>start</b> / esp_wifi_<b>stop</b></td>
+  </tr>
+  <tr>
+    <td rowspan="13">Configuration</td>
+    <td>esp_wifi_<b>set_mode</b> / esp_wifi_<b>get_mode</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>set_config</b> / esp_wifi_<b>get_config</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>set_storage</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>set_protocol</b> / esp_wifi_<b>get_protocol</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>set_country</b> / esp_wifi_<b>get_country</b></td>
+  </tr>
+  <tr>
+    <td> esp_wifi_<b>set_country_code</b> / esp_wifi_<b>get_country_code</b></td>
+  </tr>
+  <tr>
+    <td> esp_wifi_<b>set_bandwidth</b> / esp_wifi_<b>get_bandwidth</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>set_mac</b> /  esp_wifi_<b>get_mac</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>restore</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>set_vendor_ie</b> / esp_wifi_<b>set_vendor_ie_cb</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>set_channel</b> / esp_wifi_<b>get_channel</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>set_inactive_time</b> / esp_wifi_<b>get_inactive_time</b></td>
+  </tr>
+  <tr>
+    <td>  esp_wifi_<b>set_rssi_threshold</b>
+  </tr>
+  <tr>
+    <td rowspan="7">Connection</td>
+    <td>esp_wifi_<b>connect</b> / esp_wifi_<b>disconnect</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>sta_get_aid</b> / esp_wifi_<b>ap_get_sta_aid</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>sta_get_ap_info</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_ap_<b>get_sta_list_with_ip</b> / esp_wifi_ap_<b>get_sta_list</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>deauth_sta</b></td>
+  </tr>
+  <tr>
+  <td>esp_wifi_<b>sta_get_rssi</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>sta_get_negotiated_phymode</b></td>
+  </tr>
+  <tr>
+    <td rowspan="5">Scan</td>
+    <td>esp_wifi_<b>scan_start</b> / esp_wifi_<b>scan_stop</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>set_scan_parameters</b> / esp_wifi_<b>get_scan_parameters</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>scan_get_ap_num</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_scan_get_ap_<b>records</b> / esp_wifi_scan_get_ap_<b>record</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>clear_ap_list</b></td>
+  </tr>
+  <tr>
+    <td rowspan="2">Others</td>
+    <td>esp_wifi_<b>80211_tx</b></td>
+  </tr>
+  <tr>
+    <td>esp_wifi_<b>statis_dump</b></td>
+  </tr>
+</table>
 
 ## Step to enable this component in an example code:
 
