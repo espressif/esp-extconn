@@ -41,12 +41,12 @@ extern void esp_sip_txd_post(void);
 static const char *TAG = "trans_wifi";
 static wifi_tx_ctx_t *wifi_tx;
 
-static void list_wait_item()
+static void list_wait_item(void)
 {
     xEventGroupWaitBits(wifi_tx->list_event, WIFI_NEED_SEND, false, true, portMAX_DELAY);
 }
 
-static esf_buf *list_remove()
+static esf_buf *list_remove(void)
 {
     esf_buf *eb = NULL;
     xSemaphoreTake(wifi_tx->list_lock, portMAX_DELAY);
