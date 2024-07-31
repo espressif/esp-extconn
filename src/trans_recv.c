@@ -174,7 +174,11 @@ esp_err_t esp_extconn_trans_recv_init(esp_extconn_config_t *config)
 {
     sdio_mutex = xSemaphoreCreateMutex();
     size_t actual_size = 0;
-    ESP_ERROR_CHECK(esp_dma_calloc(1, RECV_BUF_LEN, 0, (void*)&recv_buf, &actual_size));
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    ESP_ERROR_CHECK(esp_dma_capable_malloc(RECV_BUF_LEN, &dma_mem_info, (void*)&recv_buf, &actual_size));
 
     ESP_RETURN_ON_FALSE(recv_buf, ESP_ERR_NO_MEM, TAG, "buffer malloc failed");
 

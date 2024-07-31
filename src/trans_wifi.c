@@ -41,12 +41,12 @@ extern void esp_sip_txd_post(void);
 static const char *TAG = "trans_wifi";
 static wifi_tx_ctx_t *wifi_tx;
 
-static void list_wait_item()
+static void list_wait_item(void)
 {
     xEventGroupWaitBits(wifi_tx->list_event, WIFI_NEED_SEND, false, true, portMAX_DELAY);
 }
 
-static esf_buf *list_remove()
+static esf_buf *list_remove(void)
 {
     esf_buf *eb = NULL;
     xSemaphoreTake(wifi_tx->list_lock, portMAX_DELAY);
@@ -143,7 +143,11 @@ static void wifi_send_task(void *args)
     uint8_t *send_buf = NULL; //calloc(1, WIFI_SEND_BUFFER_LEN);
 
     size_t actual_size = 0;
-    ESP_ERROR_CHECK(esp_dma_calloc(1, WIFI_SEND_BUFFER_LEN, 0, (void*)&send_buf, &actual_size));
+    esp_dma_mem_info_t dma_mem_info = {
+        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+    };
+    ESP_ERROR_CHECK(esp_dma_capable_malloc(WIFI_SEND_BUFFER_LEN, &dma_mem_info, (void*)&send_buf, &actual_size));
 
     ESP_LOGI(TAG, "WiFi Send START");
 

@@ -68,7 +68,11 @@ static void bt_tx_task(void *arg)
 
         if (buf.data && buf.len) {
             size_t actual_size = 0;
-            ESP_ERROR_CHECK(esp_dma_calloc(1, sizeof(sbp_hdr_t) + buf.len, 0, (void*)&hdr, &actual_size));
+            esp_dma_mem_info_t dma_mem_info = {
+                .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+                .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+            };
+            ESP_ERROR_CHECK(esp_dma_capable_malloc(sizeof(sbp_hdr_t) + buf.len, &dma_mem_info, (void*)&hdr, &actual_size));
 
             hdr->len = sizeof(sbp_hdr_t) + buf.len;
             hdr->type = 0;

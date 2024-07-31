@@ -77,7 +77,11 @@ esp_err_t esp_sip_write_mem(uint32_t addr, const uint8_t *buf, uint32_t len)
 
     if (sip->rawbuf == NULL) {
         size_t actual_size = 0;
-        err = esp_dma_calloc(1, SIP_BOOT_BUF_SIZE, 0, (void*)&sip->rawbuf, &actual_size);
+        esp_dma_mem_info_t dma_mem_info = {
+            .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
+            .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
+        };
+        err = esp_dma_capable_malloc(SIP_BOOT_BUF_SIZE, &dma_mem_info, (void*)&sip->rawbuf, &actual_size);
     }
 
     chdr = (struct sip_hdr *)sip->rawbuf;

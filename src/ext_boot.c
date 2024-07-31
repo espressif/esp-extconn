@@ -60,7 +60,7 @@ static sdmmc_card_t *sdmmc_init(void)
 
 #if CONFIG_ESP_EXT_CONN_VIA_SDIO
     config.flags        = SDMMC_HOST_FLAG_4BIT | SDMMC_HOST_FLAG_ALLOC_ALIGNED_BUF;
-    config.max_freq_khz = SDMMC_FREQ_DEFAULT;
+    config.max_freq_khz = SDMMC_FREQ_HIGHSPEED;
 
     sd_pwr_ctrl_ldo_config_t ldo_config = {
         .ldo_chan_id = 4, // `LDO_VO4` is used as the SDMMC IO power
