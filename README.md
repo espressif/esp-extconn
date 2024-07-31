@@ -71,10 +71,10 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
 
 * Hardware setup
   - Pin Connections
-    | ESP32P4 | ESP8689 |   Function  |
-    |:--------:|:--------:|:--------:|
-    | 53   | EN   |Reset|
-    | GND   | IO0  | Forcing ESP8689 in download mode|
+    | ESP32P4 | ESP8689 |             Function             |
+    | :-----: | :-----: | :------------------------------: |
+    |   53    |   EN    |              Reset               |
+    |   GND   |   IO0   | Forcing ESP8689 in download mode |
     -  The ESP32P4 controls the reset of the ESP8689 through pin 53.
 
 ## Supported Transports
@@ -89,14 +89,14 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
     <th>Supported APIs</th>
   </tr>
   <tr>
-    <td rowspan="2">Initialization</td>
+    <td rowspan="2"style="text-align:center; vertical-align:middle;">Initialization</td>
     <td>esp_wifi_<b>init</b> / esp_wifi_<b>deinit</b></td>
   </tr>
   <tr>
     <td>esp_wifi_<b>start</b> / esp_wifi_<b>stop</b></td>
   </tr>
   <tr>
-    <td rowspan="13">Configuration</td>
+    <td rowspan="13"style="text-align:center; vertical-align:middle;">Configuration</td>
     <td>esp_wifi_<b>set_mode</b> / esp_wifi_<b>get_mode</b></td>
   </tr>
   <tr>
@@ -136,7 +136,7 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
     <td>  esp_wifi_<b>set_rssi_threshold</b>
   </tr>
   <tr>
-    <td rowspan="7">Connection</td>
+    <td rowspan="7"style="text-align:center; vertical-align:middle;">Connection</td>
     <td>esp_wifi_<b>connect</b> / esp_wifi_<b>disconnect</b></td>
   </tr>
   <tr>
@@ -158,7 +158,7 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
     <td>esp_wifi_<b>sta_get_negotiated_phymode</b></td>
   </tr>
   <tr>
-    <td rowspan="5">Scan</td>
+    <td rowspan="5"style="text-align:center; vertical-align:middle;">Scan</td>
     <td>esp_wifi_<b>scan_start</b> / esp_wifi_<b>scan_stop</b></td>
   </tr>
   <tr>
@@ -174,7 +174,7 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
     <td>esp_wifi_<b>clear_ap_list</b></td>
   </tr>
   <tr>
-    <td rowspan="2">Others</td>
+    <td rowspan="2"style="text-align:center; vertical-align:middle;">Others</td>
     <td>esp_wifi_<b>80211_tx</b></td>
   </tr>
   <tr>
@@ -204,66 +204,204 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
 4. Using esp_wifi components like built-in wireless chips :)
 
 ## Throughput Performance
+### 1. Parameters
+
+<table border="1" cellspacing="0" cellpadding="5">
+    <tr>
+        <td colspan="2", style="text-align: center; font-size: 20px; font-weight: bold;">Parameters</td>
+        <td style="font-size: 20px; font-weight: bold;">Value</td>
+    </tr>
+    <tr>
+        <td rowspan="3"> System Parameters </td>
+        <td>CACHE_L2_CACHE</td>
+        <td>128 KB</td>
+    </tr>
+    <tr>
+        <td>CACHE_L2_CACHE_LINE</td>
+        <td>64 B</td>
+    </tr>
+    <tr>
+        <td>FREERTOS_HZ</td>
+        <td>100 Hz</td>
+    </tr>
+    <tr>
+        <td rowspan="6"> Wi-Fi Parameters </td>
+        <td>WIFI_STATIC_RX_BUFFER_NUM</td>
+        <td>24</td>
+    </tr>
+    <tr>
+        <td>WIFI_DYNAMIC_RX_BUFFER_NUM</td>
+        <td>128</td>
+    </tr>
+    <tr>
+        <td>WIFI_DYNAMIC_TX_BUFFER_NUM</td>
+        <td>128</td>
+    </tr>
+    <tr>
+        <td>WIFI_RX_BA_WIN</td>
+        <td>32</td>
+    </tr>
+    <tr>
+        <td>WIFI_IRAM_OPT</td>
+        <td>y</td>
+    </tr>
+    <tr>
+        <td>WIFI_RX_IRAM_OPT </td>
+        <td>y</td>
+    </tr>
+    <tr>
+        <td rowspan="7"> Lwip Parameters </td>
+        <td>LWIP_IRAM_OPTIMIZATION</td>
+        <td>y</td>
+    </tr>
+    <tr>
+        <td>LWIP_TCPIP_RECVMBOX_SIZE</td>
+        <td>64</td>
+    </tr>
+    <tr>
+        <td>LWIP_TCP_WND_DEFAULT</td>
+        <td>65535</td>
+    </tr>
+    <tr>
+        <td>LWIP_TCP_SND_BUF_DEFAULT</td>
+        <td>65535</td>
+    </tr>
+    <tr>
+        <td>LWIP_TCP_RECVMBOX_SIZE</td>
+        <td>64</td>
+    </tr>
+    <tr>
+        <td>LWIP_TCP_ACCEPTMBOX_SIZE</td>
+        <td>64</td>
+    </tr>
+    <tr>
+        <td>LWIP_UDP_RECVMBOX_SIZE</td>
+        <td>64</td>
+    </tr>
+    <tr>
+        <td rowspan="10"> Tasks Parameters </td>
+        <td>Iperf traffic Core ID</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>Iperf traffic Priority</td>
+        <td>23</td>
+    </tr>
+    <tr>
+        <td>Lwip Core ID</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>Lwip Priority</td>
+        <td>23</td>
+    </tr>
+    <tr>
+        <td>Wi-Fi Core ID</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>Wi-Fi Priority</td>
+        <td>23</td>
+    </tr>
+    <tr>
+        <td>SDIO TX Core ID</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>SDIO TX Priority</td>
+        <td>24</td>
+    </tr>
+    <tr>
+        <td>SDIO RX Core ID</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>SDIO RX Priority</td>
+        <td>23</td>
+    </tr>
+    <tr>
+        <td rowspan="4"> Router parameters </td>
+        <td>Type</td>
+        <td>ASUS RT-AX88U Pro</td>
+    </tr>
+    <tr>
+        <td>Bandwidth</td>
+        <td>40MHZ</td>
+    </tr>
+    <tr>
+        <td>Beacon interval (ms)</td>
+        <td>1000</td>
+    </tr>
+    <tr>
+        <td>Mode</td>
+        <td>N only</td>
+    </tr>
+
+</table>
+
+### 2. Performance
 #### 1. TCP TX
 ```sh
-[ ID] Interval       Transfer     Bandwidth
-[  4]  0.0- 1.0 sec  5.47 MBytes  45.9 Mbits/sec
-[  4]  1.0- 2.0 sec  5.51 MBytes  46.2 Mbits/sec
-[  4]  2.0- 3.0 sec  5.56 MBytes  46.7 Mbits/sec
-[  4]  3.0- 4.0 sec  5.56 MBytes  46.6 Mbits/sec
-[  4]  4.0- 5.0 sec  5.51 MBytes  46.3 Mbits/sec
-[  4]  5.0- 6.0 sec  5.58 MBytes  46.8 Mbits/sec
-[  4]  6.0- 7.0 sec  5.53 MBytes  46.4 Mbits/sec
-[  4]  7.0- 8.0 sec  5.55 MBytes  46.5 Mbits/sec
-[  4]  8.0- 9.0 sec  5.59 MBytes  46.9 Mbits/sec
-[  4]  9.0-10.0 sec  5.56 MBytes  46.7 Mbits/sec
-[  4]  0.0-10.0 sec  55.4 MBytes  46.5 Mbits/sec
+[ ID] Interval            Transfer      Bandwidth
+[  1] 0.0000-1.0000 sec   5.69 MBytes   47.7 Mbits/sec
+[  1] 1.0000-2.0000 sec   5.77 MBytes   48.4 Mbits/sec
+[  1] 2.0000-3.0000 sec   5.79 MBytes   48.6 Mbits/sec
+[  1] 3.0000-4.0000 sec   5.81 MBytes   48.8 Mbits/sec
+[  1] 4.0000-5.0000 sec   5.90 MBytes   49.5 Mbits/sec
+[  1] 5.0000-6.0000 sec   5.87 MBytes   49.2 Mbits/sec
+[  1] 6.0000-7.0000 sec   5.88 MBytes   49.3 Mbits/sec
+[  1] 7.0000-8.0000 sec   5.80 MBytes   48.6 Mbits/sec
+[  1] 8.0000-9.0000 sec   5.80 MBytes   48.6 Mbits/sec
+[  1] 9.0000-10.0000 sec  5.79 MBytes   48.6 Mbits/sec
+[  1] 0.0000-10.0053 sec  58.1 MBytes   48.7 Mbits/sec
 ```
 
 #### 2. TCP RX
 ```sh
-Interval       Bandwidth
- 0.0- 1.0 sec  44.47 Mbits/sec
- 1.0- 2.0 sec  45.66 Mbits/sec
- 2.0- 3.0 sec  45.50 Mbits/sec
- 3.0- 4.0 sec  45.55 Mbits/sec
- 4.0- 5.0 sec  45.93 Mbits/sec
- 5.0- 6.0 sec  45.52 Mbits/sec
- 6.0- 7.0 sec  45.36 Mbits/sec
- 7.0- 8.0 sec  45.12 Mbits/sec
- 8.0- 9.0 sec  45.92 Mbits/sec
- 9.0-10.0 sec  45.50 Mbits/sec
- 0.0-10.0 sec  45.45 Mbits/sec
+ Interval      Bandwidth
+ 0.0- 1.0 sec  51.24 Mbits/sec
+ 1.0- 2.0 sec  51.04 Mbits/sec
+ 2.0- 3.0 sec  51.59 Mbits/sec
+ 3.0- 4.0 sec  51.44 Mbits/sec
+ 4.0- 5.0 sec  51.58 Mbits/sec
+ 5.0- 6.0 sec  51.45 Mbits/sec
+ 6.0- 7.0 sec  51.25 Mbits/sec
+ 7.0- 8.0 sec  51.91 Mbits/sec
+ 8.0- 9.0 sec  51.66 Mbits/sec
+ 9.0-10.0 sec  51.21 Mbits/sec
+ 0.0-10.0 sec  51.44 Mbits/sec
  ```
 
  #### 3. UDP TX
  ```sh
-[ ID] Interval       Transfer     Bandwidth        Jitter   Lost/Total Datagrams
-[  3]  0.0- 1.0 sec  6.12 MBytes  51.3 Mbits/sec   0.242 ms    0/ 4366 (0%)
-[  3]  1.0- 2.0 sec  6.09 MBytes  51.1 Mbits/sec   0.237 ms    0/ 4343 (0%)
-[  3]  2.0- 3.0 sec  6.06 MBytes  50.9 Mbits/sec   0.245 ms    0/ 4324 (0%)
-[  3]  3.0- 4.0 sec  6.06 MBytes  50.9 Mbits/sec   0.437 ms    0/ 4326 (0%)
-[  3]  4.0- 5.0 sec  6.05 MBytes  50.7 Mbits/sec   0.231 ms    0/ 4315 (0%)
-[  3]  5.0- 6.0 sec  6.06 MBytes  50.8 Mbits/sec   0.249 ms    0/ 4321 (0%)
-[  3]  6.0- 7.0 sec  6.06 MBytes  50.8 Mbits/sec   0.253 ms    0/ 4322 (0%)
-[  3]  7.0- 8.0 sec  6.06 MBytes  50.8 Mbits/sec   0.242 ms    0/ 4323 (0%)
-[  3]  8.0- 9.0 sec  6.05 MBytes  50.8 Mbits/sec   0.257 ms    0/ 4317 (0%)
-[  3]  9.0-10.0 sec  6.05 MBytes  50.7 Mbits/sec   0.251 ms    0/ 4315 (0%)
-[  3]  0.0-10.0 sec  60.7 MBytes  50.9 Mbits/sec   0.251 ms    0/43272 (0%)
+[ ID] Interval            Transfer     Bandwidth        Jitter    Lost/Total Datagrams
+[  1] 0.0000-1.0000 sec   7.69 MBytes  64.5 Mbits/sec   0.178 ms  0/5558 (0%)
+[  1] 1.0000-2.0000 sec   7.72 MBytes  64.7 Mbits/sec   0.172 ms  0/5580 (0%)
+[  1] 2.0000-3.0000 sec   7.73 MBytes  64.8 Mbits/sec   0.196 ms  0/5589 (0%)
+[  1] 3.0000-4.0000 sec   7.71 MBytes  64.7 Mbits/sec   0.178 ms  0/5576 (0%)
+[  1] 4.0000-5.0000 sec   7.72 MBytes  64.8 Mbits/sec   0.167 ms  0/5583 (0%)
+[  1] 5.0000-6.0000 sec   7.73 MBytes  64.8 Mbits/sec   0.163 ms  0/5588 (0%)
+[  1] 6.0000-7.0000 sec   7.73 MBytes  64.9 Mbits/sec   0.168 ms  22/5615 (0.39%)
+[  1] 7.0000-8.0000 sec   7.73 MBytes  64.8 Mbits/sec   0.177 ms  24/5614 (0.43%)
+[  1] 8.0000-9.0000 sec   7.72 MBytes  64.8 Mbits/sec   0.171 ms  20/5606 (0.36%)
+[  1] 9.0000-10.0000 sec  7.72 MBytes  64.7 Mbits/sec   0.176 ms  27/5607 (0.48%)
+[  1] 0.0000-10.0010 sec  77.2 MBytes  64.8 Mbits/sec   0.195 ms  93/55922 (0.17%)
 ```
 
 #### 4. UDP RX
  ```sh
 Interval       Bandwidth
- 0.0- 1.0 sec  66.11 Mbits/sec
- 1.0- 2.0 sec  65.82 Mbits/sec
- 2.0- 3.0 sec  66.54 Mbits/sec
- 3.0- 4.0 sec  65.83 Mbits/sec
- 4.0- 5.0 sec  65.78 Mbits/sec
- 5.0- 6.0 sec  66.44 Mbits/sec
- 6.0- 7.0 sec  66.25 Mbits/sec
- 7.0- 8.0 sec  66.09 Mbits/sec
- 8.0- 9.0 sec  65.72 Mbits/sec
- 9.0-10.0 sec  65.77 Mbits/sec
- 0.0-10.0 sec  66.04 Mbits/sec
+ 0.0- 1.0 sec  84.16 Mbits/sec
+ 1.0- 2.0 sec  84.34 Mbits/sec
+ 2.0- 3.0 sec  84.43 Mbits/sec
+ 3.0- 4.0 sec  84.14 Mbits/sec
+ 4.0- 5.0 sec  83.56 Mbits/sec
+ 5.0- 6.0 sec  84.45 Mbits/sec
+ 6.0- 7.0 sec  84.57 Mbits/sec
+ 7.0- 8.0 sec  84.20 Mbits/sec
+ 8.0- 9.0 sec  83.71 Mbits/sec
+ 9.0-10.0 sec  83.86 Mbits/sec
+ 0.0-10.0 sec  84.14 Mbits/sec
 ```
+
+> **Note : Due to the limited clock frequency (40M) of SDIO, there may be slight packet loss in the UDP TX direction.**
