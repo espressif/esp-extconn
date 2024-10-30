@@ -37,6 +37,7 @@ extern void esf_buf_recycle(esf_buf *eb);
 extern void net80211_en_txdq(esf_buf *eb);
 extern bool esp_wifi_is_tx_callback(esf_buf *eb);
 extern void esp_sip_txd_post(void);
+extern void esp_sip_recycle(esf_buf *eb);
 
 static const char *TAG = "trans_wifi";
 static wifi_tx_ctx_t *wifi_tx;
@@ -220,7 +221,7 @@ static void wifi_send_task(void *args)
             net80211_en_txdq(eb);
             esp_sip_txd_post();
         } else {
-            esf_buf_recycle(eb);
+            esp_sip_recycle(eb);
         }
     }
     vTaskDelete(NULL);
