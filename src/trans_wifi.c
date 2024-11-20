@@ -22,7 +22,7 @@
 #include "ext_sdio_adapter.h"
 
 #define WIFI_NEED_SEND           (BIT0)
-#define WIFI_SEND_BUFFER_LEN     (1600)
+#define WIFI_SEND_BUFFER_LEN     (2048)
 #define PP_TXCB_SCAN_PROBEREQ_ID (1)
 
 typedef struct {
@@ -188,6 +188,11 @@ static void wifi_send_task(void *args)
             shdr->d_hw_kid = TO_TX_DESC(eb)->kid;
 
             memcpy((send_buf + SIP_CTRL_HDR_LEN), (uint8_t *)(eb->u_data_start), eb->ds_head->length);
+        }
+
+        if (send_len > actual_size) {
+            ESP_LOGE(TAG, "wifi buffer overflow %" PRIu32 "-> %" PRIu32, actual_size, send_len);
+            abort();
         }
 
         while (1) {
