@@ -22,7 +22,7 @@
 #include "ext_sdio_adapter.h"
 
 #define WIFI_NEED_SEND           (BIT0)
-#define WIFI_SEND_BUFFER_LEN     (1600)
+#define WIFI_SEND_BUFFER_LEN     (2048)
 #define PP_TXCB_SCAN_PROBEREQ_ID (1)
 
 typedef struct {
@@ -37,6 +37,7 @@ extern void esf_buf_recycle(esf_buf *eb);
 extern void net80211_en_txdq(esf_buf *eb);
 extern bool esp_wifi_is_tx_callback(esf_buf *eb);
 extern void esp_sip_txd_post(void);
+extern void esp_sip_recycle(esf_buf *eb);
 
 static const char *TAG = "trans_wifi";
 static wifi_tx_ctx_t *wifi_tx;
@@ -189,6 +190,11 @@ static void wifi_send_task(void *args)
             memcpy((send_buf + SIP_CTRL_HDR_LEN), (uint8_t *)(eb->u_data_start), eb->ds_head->length);
         }
 
+        if (send_len > actual_size) {
+            ESP_LOGE(TAG, "wifi buffer overflow %" PRIu16 "-> %" PRIu32, actual_size, send_len);
+            abort();
+        }
+
         while (1) {
             uint32_t num = 0;
             uint32_t cnt = 0;
@@ -220,7 +226,7 @@ static void wifi_send_task(void *args)
             net80211_en_txdq(eb);
             esp_sip_txd_post();
         } else {
-            esf_buf_recycle(eb);
+            esp_sip_recycle(eb);
         }
     }
     vTaskDelete(NULL);
