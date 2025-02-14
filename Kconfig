@@ -117,7 +117,7 @@ menu "ESP external connectivity"
 
             config ESP_EXT_CONN_SLAVE_ENABLE_PIN
                 int "Slave enable pin"
-                default 53
+                default 42
 
             config ESP_EXT_CONN_SLAVE_ENABLE_LVL
                 int "Slave enable gpio level"
@@ -126,7 +126,7 @@ menu "ESP external connectivity"
 
             config ESP_EXT_CONN_SLAVE_BOOT_PIN
                 int "Slave boot pin"
-                default -1
+                default 43
 
             menu "SDIO Slot configuration"
                 depends on ESP_EXT_CONN_VIA_SDIO
@@ -138,27 +138,27 @@ menu "ESP external connectivity"
 
                 config ESP_EXT_CONN_SDIO_CLK_PIN
                     int "clk"
-                    default 43
+                    default 47
 
                 config ESP_EXT_CONN_SDIO_CMD_PIN
                     int "cmd"
-                    default 44
+                    default 48
 
                 config ESP_EXT_CONN_SDIO_D0_PIN
                     int "D0"
-                    default 39
+                    default 46
 
                 config ESP_EXT_CONN_SDIO_D1_PIN
                     int "D1"
-                    default 40
+                    default 45
 
                 config ESP_EXT_CONN_SDIO_D2_PIN
                     int "D2"
-                    default 41
+                    default 50
 
                 config ESP_EXT_CONN_SDIO_D3_PIN
                     int "D3"
-                    default 42
+                    default 49
             endmenu
         endmenu
 
