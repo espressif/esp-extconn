@@ -67,15 +67,21 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
 
 ## Supported Boards
 
-* ESP32-P4_Function_EV_Board with ESP32_Module_SDIO_Converter_Board
+* ESP32-P4 Core Board with HWD-124 ESP32-P4 Core ESP32_Sub
 
 * Hardware setup
   - Pin Connections
     | ESP32P4 | ESP8689 |             Function             |
     | :-----: | :-----: | :------------------------------: |
-    |   53    |   EN    |              Reset               |
-    |   GND   |   IO0   | Forcing ESP8689 in download mode |
-    -  The ESP32P4 controls the reset of the ESP8689 through pin 53.
+    |   42    |   EN    |              Reset               |
+    |   43    |   BOOT  | Forcing ESP8689 in download mode |
+    |   45    |   D1    |              Data 1              |
+    |   46    |   D0    |              Data 0              |
+    |   47    |   CLK   |              Clock               |
+    |   48    |   CMD   |              Command             |
+    |   49    |   D3    |              Data 3              |
+    |   50    |   D2    |              Data 2              |
+    -  The ESP32P4 controls the reset of the ESP8689 through pin 42.
 
 ## Supported Transports
 
