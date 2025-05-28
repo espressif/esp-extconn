@@ -13,6 +13,7 @@
 #include "esp_err.h"
 #include "esp_check.h"
 #include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 
 #include "esp_sip.h"
 #include "ext_sdio_adapter.h"
@@ -76,12 +77,8 @@ esp_err_t esp_sip_write_mem(uint32_t addr, const uint8_t *buf, uint32_t len)
     esp_err_t err = 0;
 
     if (sip->rawbuf == NULL) {
-        size_t actual_size = 0;
-        esp_dma_mem_info_t dma_mem_info = {
-            .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-            .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-        };
-        err = esp_dma_capable_malloc(SIP_BOOT_BUF_SIZE, &dma_mem_info, (void*)&sip->rawbuf, &actual_size);
+        sip->rawbuf = heap_caps_malloc(SIP_BOOT_BUF_SIZE, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        ESP_RETURN_ON_FALSE(sip->rawbuf != NULL, ESP_ERR_NO_MEM, TAG, "No mem for rawbuf");
     }
 
     chdr = (struct sip_hdr *)sip->rawbuf;

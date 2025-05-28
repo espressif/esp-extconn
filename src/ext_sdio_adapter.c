@@ -1,11 +1,13 @@
 /*
- * SPDX-FileCopyrightText: 2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2024-2025 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 #include <string.h>
 
+#include "esp_heap_caps.h"
 #include "esp_dma_utils.h"
+
 #include "sd_protocol_defs.h"
 #include "esp_check.h"
 #include "ext_sdio_adapter.h"
@@ -214,19 +216,13 @@ esp_err_t esp_extconn_sdio_init(sdmmc_card_t *card)
 esp_err_t esp_extconn_sdio_read_reg_window(unsigned int reg_addr, uint8_t *value)
 {
 #define MAX_RETRY (1)
-    uint8_t *p_tbuf = NULL;
     int ret = 0;
     int retry = MAX_RETRY;
 
     reg_addr >>= 2;
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
-    size_t actual_size = 0;
-    esp_dma_mem_info_t dma_mem_info = {
-        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-    };
-    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&p_tbuf, &actual_size);
+    uint8_t *p_tbuf = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     p_tbuf[0] = (reg_addr & 0x7f);
@@ -252,18 +248,12 @@ esp_err_t esp_extconn_sdio_read_reg_window(unsigned int reg_addr, uint8_t *value
 
 static int esp_extconn_sdio_write_reg_window(unsigned int reg_addr, uint8_t *value)
 {
-    uint8_t *p_tbuf = NULL;
     int ret = ESP_OK;
 
     reg_addr >>= 2;
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
-    size_t actual_size = 0;
-    esp_dma_mem_info_t dma_mem_info = {
-        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-    };
-    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&p_tbuf, &actual_size);
+    uint8_t *p_tbuf = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     memcpy(p_tbuf, value, 4);
@@ -278,13 +268,7 @@ static int esp_extconn_sdio_write_reg_window(unsigned int reg_addr, uint8_t *val
 
 static esp_err_t esp_extconn_sdio_init_slave_link(void)
 {
-    uint32_t *t_buf = NULL;
-    size_t actual_size = 0;
-    esp_dma_mem_info_t dma_mem_info = {
-        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-    };
-    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&t_buf, &actual_size);
+    uint32_t *t_buf = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     ESP_RETURN_ON_FALSE(t_buf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     // set stitch en
@@ -314,8 +298,7 @@ static esp_err_t esp_extconn_sdio_init_slave_link(void)
     ESP_LOGI(TAG, "read ESP_SLC_0_LEN_CONF_REG is 0x%" PRIx32, t_buf[0]);
 
     // Enable target interrupt
-    uint32_t *val = 0;
-    esp_dma_capable_malloc(sizeof(uint32_t), &dma_mem_info, (void*)&val, &actual_size);
+    uint32_t *val = heap_caps_malloc(sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     ESP_RETURN_ON_FALSE(val != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     extconn_sdio_read_bytes(host->card, 1, ESP_SDIO_FUNC1_INT_ENA, (uint8_t *)val, sizeof(uint32_t));
