@@ -17,6 +17,7 @@
 #include "ext_default.h"
 #include "sip2_common.h"
 #include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 #include "esp_extconn.h"
 
 #include "ext_sdio_adapter.h"
@@ -141,14 +142,13 @@ static void list_clear(void)
 static void wifi_send_task(void *args)
 {
     esp_err_t err = ESP_OK;
-    uint8_t *send_buf = NULL; //calloc(1, WIFI_SEND_BUFFER_LEN);
-
-    size_t actual_size = 0;
-    esp_dma_mem_info_t dma_mem_info = {
-        .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-        .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-    };
-    ESP_ERROR_CHECK(esp_dma_capable_malloc(WIFI_SEND_BUFFER_LEN, &dma_mem_info, (void*)&send_buf, &actual_size));
+    uint8_t *send_buf = heap_caps_malloc(WIFI_SEND_BUFFER_LEN, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    if (!send_buf) {
+        ESP_LOGE(TAG, "malloc send_buf failed");
+        vTaskDelete(NULL);
+        return;
+    }
+    size_t actual_size = heap_caps_get_allocated_size(send_buf);
 
     ESP_LOGI(TAG, "WiFi Send START");
 

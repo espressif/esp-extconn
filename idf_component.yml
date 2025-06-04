@@ -1,9 +1,8 @@
 description: EXT CONN driver
 
-version: "0.3.1"
+version: "0.3.2"
 
 dependencies:
-  # Requires i2c_master_read_from_device added in v4.4
   idf: ">=5.3.0"
 target:
   - esp32p4

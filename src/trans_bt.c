@@ -16,6 +16,7 @@
 #include "ext_sdio_adapter.h"
 #include "esp_extconn.h"
 #include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 
 typedef struct {
     uint32_t len     : 24,
@@ -67,13 +68,12 @@ static void bt_tx_task(void *arg)
         }
 
         if (buf.data && buf.len) {
-            size_t actual_size = 0;
-            esp_dma_mem_info_t dma_mem_info = {
-                .extra_heap_caps = MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL,
-                .dma_alignment_bytes = 4, //legacy API behaviour is only check max dma buffer alignment
-            };
-            ESP_ERROR_CHECK(esp_dma_capable_malloc(sizeof(sbp_hdr_t) + buf.len, &dma_mem_info, (void*)&hdr, &actual_size));
-
+            hdr = heap_caps_malloc(sizeof(sbp_hdr_t) + buf.len, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+            if (!hdr) {
+                ESP_LOGE(TAG, "malloc sbp_hdr_t failed");
+                free(buf.data);
+                continue;
+            }
             hdr->len = sizeof(sbp_hdr_t) + buf.len;
             hdr->type = 0;
             hdr->subtype = 0;
