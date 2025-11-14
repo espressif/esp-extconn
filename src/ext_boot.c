@@ -9,7 +9,7 @@
 #include "driver/sdspi_host.h"
 
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
-
+#include "freertos/FreeRTOS.h"
 #include "esp_sip.h"
 #include "esp_extconn.h"
 #include "ext_sdio_adapter.h"
