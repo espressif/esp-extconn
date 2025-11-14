@@ -1,6 +1,6 @@
 description: EXT CONN driver
 
-version: "0.3.2"
+version: "0.3.3"
 
 dependencies:
   idf: ">=5.3.0"
