@@ -7,7 +7,7 @@
 
 #include "driver/sdmmc_host.h"
 #include "driver/sdspi_host.h"
-
+#include "freertos/FreeRTOS.h"
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
 
 #include "esp_sip.h"

@@ -7,7 +7,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_dma_utils.h"
-
+#include "freertos/FreeRTOS.h"
 #include "sd_protocol_defs.h"
 #include "esp_check.h"
 #include "ext_sdio_adapter.h"
