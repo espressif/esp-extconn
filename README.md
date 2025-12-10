@@ -209,6 +209,30 @@ This component provides external wireless connectivity(Wi-Fi & Bluetooth) for ES
 
 4. Using esp_wifi components like built-in wireless chips :)
 
+5. If you are working on a Bluetooth project, please remove any dependencies related to the Bluetooth Controller in the main file. For example:
+    ```c
+    #ifndef CONFIG_ESP_EXT_CONN_ENABLE
+    #include "esp_bt.h"
+    #endif
+    ```
+    and
+    ```c
+    #ifndef CONFIG_ESP_EXT_CONN_ENABLE
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BLE));
+
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    if ((err = esp_bt_controller_init(&bt_cfg)) != ESP_OK) {
+        ESP_LOGE(BT_AV_TAG, "%s initialize controller failed: %s", __func__, esp_err_to_name(err));
+        return;
+    }
+    if ((err = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT)) != ESP_OK) {
+        ESP_LOGE(BT_AV_TAG, "%s enable controller failed: %s", __func__, esp_err_to_name(err));
+        return;
+    }
+    #endif
+    ```
+
+
 ## Throughput Performance
 ### 1. Parameters
 
