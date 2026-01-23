@@ -26,7 +26,7 @@
 #define RECV_BUF_LEN (32 * 1024)
 #define RECV_WAIT_MS (50)
 
-static char *TAG = "trans_recv";
+static const char *TAG = "trans_recv";
 static uint8_t *recv_buf = NULL;
 static  SemaphoreHandle_t sdio_mutex = NULL;
 
