@@ -14,7 +14,7 @@
 #include "esp_extconn.h"
 #include "ext_default.h"
 
-static char *TAG = "extconn";
+static const char *TAG = "extconn";
 
 esp_err_t esp_extconn_init(esp_extconn_config_t *config)
 {
