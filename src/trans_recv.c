@@ -19,7 +19,7 @@
 #include "sdio_host_reg.h"
 #include "sip2_common.h"
 #include "ext_default.h"
-#include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 
 // TODO: 32K!!!
 #define RECV_BUF_LEN (32 * 1024)
@@ -173,9 +173,7 @@ static void trans_recv_task(void *args)
 esp_err_t esp_extconn_trans_recv_init(esp_extconn_config_t *config)
 {
     sdio_mutex = xSemaphoreCreateMutex();
-    size_t actual_size = 0;
-    ESP_ERROR_CHECK(esp_dma_calloc(1, RECV_BUF_LEN, 0, (void*)&recv_buf, &actual_size));
-
+    recv_buf = heap_caps_calloc(1, RECV_BUF_LEN, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
     ESP_RETURN_ON_FALSE(recv_buf, ESP_ERR_NO_MEM, TAG, "buffer malloc failed");
 
     esp_err_t ret = xTaskCreatePinnedToCore(trans_recv_task, "trans_recv",

@@ -12,7 +12,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_check.h"
-#include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 
 #include "esp_sip.h"
 #include "ext_sdio_adapter.h"
@@ -76,8 +76,8 @@ esp_err_t esp_sip_write_mem(uint32_t addr, const uint8_t *buf, uint32_t len)
     esp_err_t err = 0;
 
     if (sip->rawbuf == NULL) {
-        size_t actual_size = 0;
-        err = esp_dma_calloc(1, SIP_BOOT_BUF_SIZE, 0, (void*)&sip->rawbuf, &actual_size);
+        sip->rawbuf = heap_caps_calloc(1, SIP_BOOT_BUF_SIZE, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
+        ESP_RETURN_ON_FALSE(sip->rawbuf, ESP_ERR_NO_MEM, TAG, "rawbuf calloc failed");
     }
 
     chdr = (struct sip_hdr *)sip->rawbuf;

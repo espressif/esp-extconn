@@ -5,7 +5,10 @@
  */
 #include <string.h>
 
-#include "esp_dma_utils.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#include "esp_heap_caps.h"
 #include "sd_protocol_defs.h"
 #include "esp_check.h"
 #include "ext_sdio_adapter.h"
@@ -221,8 +224,7 @@ esp_err_t esp_extconn_sdio_read_reg_window(unsigned int reg_addr, uint8_t *value
     reg_addr >>= 2;
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
-    size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&p_tbuf, &actual_size);
+    p_tbuf = heap_caps_calloc(1, sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     p_tbuf[0] = (reg_addr & 0x7f);
@@ -254,8 +256,9 @@ static int esp_extconn_sdio_write_reg_window(unsigned int reg_addr, uint8_t *val
     reg_addr >>= 2;
     ESP_RETURN_ON_FALSE(reg_addr <= 0x7f, ESP_ERR_INVALID_ARG, TAG, "Invalid parameters");
 
-    size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&p_tbuf, &actual_size);
+    /* Holds the 4-byte register value followed by the 2-byte window command,
+       and the whole 8 bytes go out in one CMD53 write. */
+    p_tbuf = heap_caps_calloc(1, 8, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
     ESP_RETURN_ON_FALSE(p_tbuf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     memcpy(p_tbuf, value, 4);
@@ -270,9 +273,7 @@ static int esp_extconn_sdio_write_reg_window(unsigned int reg_addr, uint8_t *val
 
 static esp_err_t esp_extconn_sdio_init_slave_link(void)
 {
-    uint32_t *t_buf = NULL;
-    size_t actual_size = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&t_buf, &actual_size);
+    uint32_t *t_buf = heap_caps_calloc(1, sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
     ESP_RETURN_ON_FALSE(t_buf != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     // set stitch en
@@ -302,8 +303,7 @@ static esp_err_t esp_extconn_sdio_init_slave_link(void)
     ESP_LOGI(TAG, "read ESP_SLC_0_LEN_CONF_REG is 0x%" PRIx32, t_buf[0]);
 
     // Enable target interrupt
-    uint32_t *val = 0;
-    esp_dma_calloc(1, sizeof(uint32_t), 0, (void*)&val, &actual_size);
+    uint32_t *val = heap_caps_calloc(1, sizeof(uint32_t), MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
     ESP_RETURN_ON_FALSE(val != NULL, ESP_ERR_NO_MEM, TAG, "Fatal: Sufficient memory");
 
     extconn_sdio_read_bytes(host->card, 1, ESP_SDIO_FUNC1_INT_ENA, (uint8_t *)val, sizeof(uint32_t));

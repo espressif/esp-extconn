@@ -15,7 +15,7 @@
 #include "ext_default.h"
 #include "ext_sdio_adapter.h"
 #include "esp_extconn.h"
-#include "esp_dma_utils.h"
+#include "esp_heap_caps.h"
 
 typedef struct {
     uint32_t len     : 24,
@@ -67,8 +67,8 @@ static void bt_tx_task(void *arg)
         }
 
         if (buf.data && buf.len) {
-            size_t actual_size = 0;
-            ESP_ERROR_CHECK(esp_dma_calloc(1, sizeof(sbp_hdr_t) + buf.len, 0, (void*)&hdr, &actual_size));
+            hdr = heap_caps_calloc(1, sizeof(sbp_hdr_t) + buf.len, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
+            ESP_ERROR_CHECK(hdr ? ESP_OK : ESP_ERR_NO_MEM);
 
             hdr->len = sizeof(sbp_hdr_t) + buf.len;
             hdr->type = 0;
