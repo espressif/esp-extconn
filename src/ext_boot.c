@@ -113,6 +113,15 @@ static sdmmc_card_t *sdmmc_init(void)
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 
+    /* Reporting the card as usable after every attempt failed makes the caller
+       run the whole SIP bring-up against an unenumerated card, which buries the
+       real error under a cascade of follow-up failures. */
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "slave did not enumerate after 10 attempts, last error 0x%X", ret);
+        free(card);
+        return NULL;
+    }
+
     sdmmc_card_print_info(stdout, card);
 
     return card;
