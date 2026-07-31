@@ -1,0 +1,6 @@
+# Written by the IDF component manager when this component is consumed as a
+# local override. They are build artifacts, not sources -- leaving them
+# untracked would otherwise make the superproject report this submodule as
+# permanently dirty.
+/.component_hash
+/CHECKSUMS.json
