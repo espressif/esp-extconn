@@ -57,6 +57,8 @@ enum sip_cmd_id {
     SIP_CMD_RECALC_CREDIT,   // 27
     SIP_CMD_BT_STATE,        // 28
     SIP_CMD_TEST,            // 29
+    SIP_CMD_SNIFFER,           // 30
+    SIP_CMD_SET_RX_POLICY,     // 31
     SIP_CMD_MAX,
 };
 
@@ -414,6 +416,13 @@ struct sip_cmd_ampdu_action {
     uint8_t  win_size;
     uint16_t ssn;
     uint8_t  addr[EXT_ETH_ALEN];
+} __packed;
+
+struct sip_cmd_set_rx_policy {
+    uint8_t index;
+    uint8_t beacon;
+    uint8_t bc;
+    uint8_t uc;
 } __packed;
 
 #define SIP_TX_ST_OK     0
