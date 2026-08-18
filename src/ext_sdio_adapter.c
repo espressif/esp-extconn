@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <inttypes.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -26,13 +27,14 @@ static sdio_host_t *host = NULL;
 
 static esp_err_t esp_extconn_sdio_init_slave_link(void);
 
-static esp_err_t extconn_sdio_read_bytes(sdmmc_card_t* card, uint32_t function,
-                                         uint32_t addr, void* dst, size_t size)
+static esp_err_t extconn_sdio_read_bytes_mode(sdmmc_card_t* card, uint32_t function,
+                                              uint32_t addr, void* dst, size_t size,
+                                              bool increment)
 {
     uint8_t *pc_dst = dst;
     uint32_t arg = SD_ARG_CMD53_READ;
 
-    if (function == EXT_CONN_WIFI_SDIO_FUNC) {
+    if (function == EXT_CONN_WIFI_SDIO_FUNC && increment) {
         arg |= SD_ARG_CMD53_INCREMENT;
     }
 
@@ -42,6 +44,33 @@ static esp_err_t extconn_sdio_read_bytes(sdmmc_card_t* card, uint32_t function,
 
         esp_err_t err = sdmmc_io_rw_extended(card, function, addr, arg,
                                              pc_dst, will_transfer);
+        if (unlikely(err != ESP_OK)) {
+            return err;
+        }
+        pc_dst += will_transfer;
+        size -= will_transfer;
+        if (increment) {
+            addr += will_transfer;
+        }
+    }
+    return ESP_OK;
+}
+
+static esp_err_t extconn_sdio_read_bytes(sdmmc_card_t* card, uint32_t function,
+                                         uint32_t addr, void* dst, size_t size)
+{
+    return extconn_sdio_read_bytes_mode(card, function, addr, dst, size, true);
+}
+
+static esp_err_t extconn_sdio_read_bytes_chunked(sdmmc_card_t* card, uint32_t function,
+                                                 uint32_t addr, void* dst, size_t size)
+{
+    uint8_t *pc_dst = dst;
+
+    while (size > 0) {
+        size_t will_transfer = size > 4 ? 4 : size;
+        esp_err_t err = extconn_sdio_read_bytes(card, function, addr,
+                                                pc_dst, will_transfer);
         if (unlikely(err != ESP_OK)) {
             return err;
         }
@@ -78,12 +107,13 @@ static esp_err_t extconn_sdio_write_bytes(sdmmc_card_t* card, uint32_t function,
     return ESP_OK;
 }
 
-static esp_err_t extconn_sdio_read_blocks(sdmmc_card_t* card, uint32_t function,
-                                          uint32_t addr, void* dst, size_t size)
+static esp_err_t extconn_sdio_read_blocks_mode(sdmmc_card_t* card, uint32_t function,
+                                               uint32_t addr, void* dst, size_t size,
+                                               bool increment)
 {
     uint32_t arg = SD_ARG_CMD53_READ | SD_ARG_CMD53_BLOCK_MODE;
 
-    if (function == EXT_CONN_WIFI_SDIO_FUNC) {
+    if (function == EXT_CONN_WIFI_SDIO_FUNC && increment) {
         arg |= SD_ARG_CMD53_INCREMENT;
     }
 
@@ -91,6 +121,12 @@ static esp_err_t extconn_sdio_read_blocks(sdmmc_card_t* card, uint32_t function,
         return ESP_ERR_INVALID_SIZE;
     }
     return sdmmc_io_rw_extended(card, function, addr, arg, dst, size);
+}
+
+static esp_err_t extconn_sdio_read_blocks(sdmmc_card_t* card, uint32_t function,
+                                          uint32_t addr, void* dst, size_t size)
+{
+    return extconn_sdio_read_blocks_mode(card, function, addr, dst, size, true);
 }
 
 static esp_err_t extconn_sdio_write_blocks(sdmmc_card_t* card, uint32_t function,
@@ -318,6 +354,8 @@ static esp_err_t esp_extconn_sdio_init_slave_link(void)
 esp_err_t esp_extconn_sdio_get_buffer_size(uint32_t *buffer_size)
 {
     uint32_t len = 0;
+    static uint32_t credit_reads;
+    static uint32_t last_remote_tx = UINT32_MAX;
     esp_err_t ret = extconn_sdio_read_bytes(host->card, 1, ESP_SDIO_TOKEN_RDATA, &len, 4);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Read length error, ret=%d", ret);
@@ -327,6 +365,22 @@ esp_err_t esp_extconn_sdio_get_buffer_size(uint32_t *buffer_size)
     len = (len >> ESP_SDIO_SEND_OFFSET) & TX_BUFFER_MASK;
     len = (len + TX_BUFFER_MAX - host->total_tx) % TX_BUFFER_MAX;
     *buffer_size = len;
+    credit_reads++;
+    if (len == 0 && (credit_reads == 1 || (credit_reads % 500) == 0)) {
+        ESP_LOGW(TAG,
+                 "SDIO TX credit zero: remote_tx=0x%" PRIx32
+                 " host_total_tx=0x%" PRIx32 " available=%" PRIu32
+                 " reads=%" PRIu32,
+                 (uint32_t)((len + host->total_tx) % TX_BUFFER_MAX),
+                 host->total_tx, len, credit_reads);
+    }
+    if (len != 0 && ((len + host->total_tx) % TX_BUFFER_MAX) != last_remote_tx) {
+        last_remote_tx = (len + host->total_tx) % TX_BUFFER_MAX;
+        ESP_LOGW(TAG,
+                 "SDIO TX credit update: remote_tx=0x%" PRIx32
+                 " host_total_tx=0x%" PRIx32 " available=%" PRIu32,
+                 last_remote_tx, host->total_tx, len);
+    }
     return ret;
 }
 
@@ -346,18 +400,28 @@ static esp_err_t esp_extconn_sdio_get_rx_data_size(uint32_t function, uint32_t *
         uint8_t *pf = (uint8_t *)&len;
         *rx_size = (((pf[1] << 16) | (pf[2] << 8) | (pf[3] << 0)) & 0xffffff);
     } else {
-        len &= RX_BYTE_MASK;
-        len = (len + RX_BYTE_MAX - host->total_rx) % RX_BYTE_MAX;
-        *rx_size = len;
+        uint32_t raw_len = len;
+        uint32_t masked_len = raw_len & RX_BYTE_MASK;
+        uint32_t total_rx_before = host->total_rx;
+        uint32_t delta_len = (masked_len + RX_BYTE_MAX - total_rx_before) % RX_BYTE_MAX;
+        *rx_size = delta_len;
+        ESP_LOGW(TAG,
+                 "SDIO RX SIZE raw=0x%08" PRIx32
+                 " masked=0x%05" PRIx32
+                 " total_rx=%" PRIu32
+                 " delta=%" PRIu32,
+                 raw_len, masked_len, total_rx_before, delta_len);
     }
     return ESP_OK;
 }
 
 esp_err_t esp_extconn_sdio_get_packet(uint32_t function, void *out_buf, size_t size, size_t *out_length, uint32_t wait_ms)
 {
+    static uint32_t rx_packet_id;
     esp_err_t err = ESP_OK;
     uint32_t len = 0;
     uint32_t wait_time = 0;
+    uint32_t total_rx_before = host ? host->total_rx : 0;
 
     ESP_RETURN_ON_FALSE(size > 0, ESP_ERR_INVALID_ARG, TAG, "Invalid size");
 
@@ -376,6 +440,12 @@ esp_err_t esp_extconn_sdio_get_packet(uint32_t function, void *out_buf, size_t s
         vTaskDelay(pdMS_TO_TICKS(1));
     }
     ESP_LOGV(TAG, "get_packet: slave len=%" PRIu32", max read size=%d", len, size);
+    uint32_t packet_id = ++rx_packet_id;
+    ESP_LOGW(TAG,
+             "SDIO RX GET #%" PRIu32
+             " func=%" PRIu32 " delta_len=%" PRIu32
+             " total_before=%" PRIu32 " max_size=%zu",
+             packet_id, function, len, total_rx_before, size);
 
     if (len > size) {
         len = size;
@@ -390,9 +460,15 @@ esp_err_t esp_extconn_sdio_get_packet(uint32_t function, void *out_buf, size_t s
         int len_to_send;
         int block_n = len_remain / block_size;
         uint32_t addr = (function == EXT_CONN_WIFI_SDIO_FUNC) ? (ESP_SLAVE_CMD53_END_ADDR - len_remain) : 0;
+        const char *read_mode = block_n != 0 ? "increment-block" : "increment-chunk4";
 
         if (block_n != 0) {
             len_to_send = block_n * block_size;
+            ESP_LOGW(TAG,
+                     "SDIO RX READ #%" PRIu32
+                     " mode=%s remain=%" PRIu32 " addr=0x%05" PRIx32
+                     " read_len=%d block_n=%d",
+                     packet_id, read_mode, len_remain, addr, len_to_send, block_n);
             err = extconn_sdio_read_blocks(host->card, function, addr, start_ptr, len_to_send);
         } else {
             len_to_send = len_remain;
@@ -402,13 +478,24 @@ esp_err_t esp_extconn_sdio_get_packet(uint32_t function, void *out_buf, size_t s
              * effeciency. The length is determined by the SDIO address, and the
              * remainning will be ignored by the slave hardware.
              */
-            err = extconn_sdio_read_bytes(host->card, function, addr, start_ptr, (len_to_send + 3) & (~3));
+            ESP_LOGW(TAG,
+                     "SDIO RX READ #%" PRIu32
+                     " mode=%s remain=%" PRIu32 " addr=0x%05" PRIx32
+                     " read_len=%d transfer_len=%d",
+                     packet_id, read_mode, len_remain, addr, len_to_send,
+                     (len_to_send + 3) & (~3));
+            err = extconn_sdio_read_bytes_chunked(host->card, function, addr, start_ptr,
+                                                  (len_to_send + 3) & (~3));
         }
 
         if (err != ESP_OK) {
+            ESP_LOGE(TAG, "SDIO RX READ #%" PRIu32 " failed ret=%d", packet_id, err);
             return err;
         }
 
+        ESP_LOGW(TAG,
+                 "SDIO RX READ #%" PRIu32 " done remain_after=%" PRIu32,
+                 packet_id, len_remain - len_to_send);
         start_ptr += len_to_send;
         len_remain -= len_to_send;
     } while (len_remain != 0);
@@ -417,6 +504,17 @@ esp_err_t esp_extconn_sdio_get_packet(uint32_t function, void *out_buf, size_t s
     if (function != EXT_CONN_BT_SDIO_FUNC) {
         host->total_rx += len;
     }
+    ESP_LOGW(TAG,
+             "SDIO RX DONE #%" PRIu32 " out_len=%" PRIu32
+             " total_after=%" PRIu32 " first_bytes=%02x %02x %02x %02x "
+             "%02x %02x %02x %02x %02x %02x %02x %02x",
+             packet_id, len, host->total_rx,
+             ((uint8_t *)out_buf)[0], ((uint8_t *)out_buf)[1],
+             ((uint8_t *)out_buf)[2], ((uint8_t *)out_buf)[3],
+             ((uint8_t *)out_buf)[4], ((uint8_t *)out_buf)[5],
+             ((uint8_t *)out_buf)[6], ((uint8_t *)out_buf)[7],
+             ((uint8_t *)out_buf)[8], ((uint8_t *)out_buf)[9],
+             ((uint8_t *)out_buf)[10], ((uint8_t *)out_buf)[11]);
     return ESP_OK;
 }
 
