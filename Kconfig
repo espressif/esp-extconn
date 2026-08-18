@@ -26,6 +26,14 @@ menu "ESP external connectivity"
 
         endchoice
 
+        config SOC_WIFI_SUPPORT_5G
+            bool
+            default y if ESP_EXT_CONN_TARGET_ESP32C5
+            help
+                Compatibility mapping for external Wi-Fi hosts. When the
+                external Wi-Fi target is ESP32-C5, the host-side Wi-Fi
+                feature checks should see 5 GHz support.
+
         config ESP_EXT_CONN_WIFI_ENABLE
             bool "Enable the external wifi connective"
             depends on ESP_HOST_WIFI_ENABLED
