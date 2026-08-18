@@ -104,7 +104,7 @@ ESP_STATIC_ASSERT(sizeof(esf_rx_desc_t) == 0xc, "Invalid size of esf_rx_desc_t s
 
 #define LLDESC 1
 #define ESP_MESH_SUPPORT 1
-//#define HAL_MAC_ESP32AC 
+#define HAL_MAC_ESP32AC 1
 #define HAL_MAC_ESP32AX 1
 
 typedef struct esf_buf_s {
