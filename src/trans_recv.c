@@ -46,44 +46,22 @@ static esp_err_t handle_intr0(uint32_t intr, uint32_t wait_ms)
 {
     size_t rlen = 0;
     esp_extconn_sdio_lock();
-    esp_err_t ret = esp_extconn_sdio_get_packet(EXT_CONN_WIFI_SDIO_FUNC,
-                                                recv_buf, RECV_BUF_LEN,
-                                                &rlen, wait_ms);
+    esp_extconn_sdio_get_packet(EXT_CONN_WIFI_SDIO_FUNC, recv_buf, RECV_BUF_LEN, &rlen, wait_ms);
     esp_extconn_sdio_unlock();
-    ESP_RETURN_ON_FALSE(ret == ESP_OK, ret, TAG,
-                       "get packet failed ret=%d rlen=%zu", ret, rlen);
     ESP_RETURN_ON_FALSE(rlen >= sizeof(struct sip_hdr), ESP_FAIL, TAG, "recv error!");
 
     uint8_t *buf = recv_buf;
     while (rlen) {
-        if (rlen < sizeof(struct sip_hdr)) {
-            ESP_LOGE(TAG, "trailing bytes: offset=%zu remaining=%zu",
-                     (size_t)(buf - recv_buf), rlen);
-            ESP_LOG_BUFFER_HEXDUMP(TAG, buf, rlen, ESP_LOG_ERROR);
-            return ESP_FAIL;
-        }
-
         struct sip_hdr *hdr = (struct sip_hdr *)buf;
-        size_t offset = (size_t)(buf - recv_buf);
-        ESP_LOGV(TAG,
-                 "packet offset=%zu remaining=%zu fc0=0x%02x fc1=0x%02x "
-                 "len=%u credits=0x%" PRIx32 " seq=%" PRIu32,
-                 offset, rlen, hdr->fc[0], hdr->fc[1], hdr->len,
-                 hdr->u.recycled_credits, hdr->seq);
-        if (hdr->len == 0 || hdr->len > rlen || (hdr->len & 3) != 0) {
-            ESP_LOGE(TAG,
-                     "invalid SIP header: offset=%zu remaining=%zu "
-                     "fc0=0x%02x fc1=0x%02x len=%u seq=%" PRIu32,
-                     offset, rlen, hdr->fc[0], hdr->fc[1], hdr->len, hdr->seq);
-            ESP_LOG_BUFFER_HEXDUMP(TAG, buf, rlen < 32 ? rlen : 32, ESP_LOG_ERROR);
+        ESP_LOGV(TAG, "total len %d FC0 %d len %d recycled_credits %" PRIu32" seq %" PRIu32,
+                 rlen, hdr->fc[0], hdr->len, hdr->u.recycled_credits, hdr->seq);
+        if (hdr->len <= 0 || (hdr->len & 3) != 0) {
+            ESP_LOGE(TAG, "hdrlen %d err!!!", hdr->len);
             return ESP_FAIL;
         }
         uint32_t rxseq = esp_sip_increase_rxseq();
         if (hdr->seq != rxseq) {
-            ESP_LOGE(TAG,
-                     "seq mismatch: offset=%zu hdr_seq=%" PRIu32
-                     " expected=%" PRIu32 " len=%u remaining=%zu",
-                     offset, hdr->seq, rxseq, hdr->len, rlen);
+            ESP_LOGE(TAG, "seq err!!! %" PRIu32 "%" PRIu32, hdr->seq, rxseq);
             return ESP_FAIL;
         }
         if (SIP_HDR_IS_CTRL(hdr)) {
@@ -92,8 +70,8 @@ static esp_err_t handle_intr0(uint32_t intr, uint32_t wait_ms)
         }
 #ifdef CONFIG_ESP_EXT_CONN_WIFI_ENABLE
         else if (SIP_HDR_IS_DATA(hdr)) {
-            ESP_LOGI(TAG, "rx data len %d, seq %" PRIu32, hdr->len, hdr->seq);
-            //sip_rx_process(buf, hdr->len);
+            ESP_LOGV(TAG, "rx data len %d, seq %" PRIu32, hdr->len, hdr->seq);
+            sip_rx_process(buf, hdr->len);
         } else if (SIP_HDR_IS_AMPDU(hdr)) {
             ESP_LOGV(TAG, "rx ampdu len %d, seq %" PRIu32, hdr->len, hdr->seq);
             sip_rx_process(buf, hdr->len);
@@ -171,12 +149,7 @@ static void trans_recv_task(void *args)
 
         esp_extconn_sdio_lock();
         ret = esp_extconn_sdio_get_intr(&intr_0, &intr_1);
-        if (ret != ESP_OK) {
-            esp_extconn_sdio_unlock();
-            ESP_LOGE(TAG, "interrupt read failed ret=%d; keeping receive task alive", ret);
-            vTaskDelay(pdMS_TO_TICKS(1));
-            continue;
-        }
+        ESP_RETURN_ON_FALSE(ret == ESP_OK, esp_extconn_sdio_unlock(), TAG, "interrupt read failed");
         if (intr_0 == 0 && intr_1 == 0) {
             esp_extconn_sdio_unlock();
             continue;
