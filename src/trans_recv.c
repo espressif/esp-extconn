@@ -21,12 +21,21 @@
 #include "ext_default.h"
 #include "esp_heap_caps.h"
 
-// TODO: 32K!!!
-#define RECV_BUF_LEN (32 * 1024)
+#include <string.h>
+
+/*
+ * Slave sip_start_send() publishes one aggregate of up to 35000 bytes, and the
+ * C5 RX pool can hold more than that. A 32KB cap cuts the aggregate mid-packet.
+ * 48KB holds one 35000-byte aggregate; bytes past the last complete SIP message
+ * stay in recv_saved and are prepended to the next read.
+ */
+#define RECV_BUF_LEN (48 * 1024)
 #define RECV_WAIT_MS (50)
 
 static char *TAG = "trans_recv";
 static uint8_t *recv_buf = NULL;
+static uint8_t *recv_dma = NULL;
+static size_t recv_saved = 0;
 static  SemaphoreHandle_t sdio_mutex = NULL;
 
 extern void sip_rx_process(uint8_t *buf, uint32_t len);
@@ -42,22 +51,59 @@ void esp_extconn_sdio_unlock(void)
     xSemaphoreGive(sdio_mutex);
 }
 
+static void recv_keep(const uint8_t *src, size_t len)
+{
+    if (src != recv_buf && len > 0) {
+        memmove(recv_buf, src, len);
+    }
+    recv_saved = len;
+}
+
 static esp_err_t handle_intr0(uint32_t intr, uint32_t wait_ms)
 {
-    size_t rlen = 0;
-    esp_extconn_sdio_lock();
-    esp_extconn_sdio_get_packet(EXT_CONN_WIFI_SDIO_FUNC, recv_buf, RECV_BUF_LEN, &rlen, wait_ms);
-    esp_extconn_sdio_unlock();
-    ESP_RETURN_ON_FALSE(rlen >= sizeof(struct sip_hdr), ESP_FAIL, TAG, "recv error!");
+    size_t got = 0;
+    size_t space = RECV_BUF_LEN - recv_saved;
 
+    if (space < sizeof(struct sip_hdr)) {
+        ESP_LOGE(TAG, "rx assembly full saved=%u", (unsigned)recv_saved);
+        recv_saved = 0;
+        space = RECV_BUF_LEN;
+    }
+
+    esp_extconn_sdio_lock();
+    esp_extconn_sdio_get_packet(EXT_CONN_WIFI_SDIO_FUNC, recv_dma, space, &got, wait_ms);
+    esp_extconn_sdio_unlock();
+    if (got == 0) {
+        if (recv_saved == 0) {
+            ESP_LOGE(TAG, "recv error!");
+        }
+        return ESP_FAIL;
+    }
+
+    if (recv_saved > 0) {
+        memcpy(recv_buf + recv_saved, recv_dma, got);
+    } else if (got > 0) {
+        memcpy(recv_buf, recv_dma, got);
+    }
+
+    size_t rlen = recv_saved + got;
+    recv_saved = 0;
     uint8_t *buf = recv_buf;
     while (rlen) {
+        if (rlen < sizeof(struct sip_hdr)) {
+            recv_keep(buf, rlen);
+            return ESP_OK;
+        }
         struct sip_hdr *hdr = (struct sip_hdr *)buf;
         ESP_LOGV(TAG, "total len %d FC0 %d len %d recycled_credits %" PRIu32" seq %" PRIu32,
                  rlen, hdr->fc[0], hdr->len, hdr->u.recycled_credits, hdr->seq);
-        if (hdr->len <= 0 || (hdr->len & 3) != 0) {
+        if (hdr->len <= 0 || (hdr->len & 3) != 0 || hdr->len > RECV_BUF_LEN) {
             ESP_LOGE(TAG, "hdrlen %d err!!!", hdr->len);
             return ESP_FAIL;
+        }
+        if ((size_t)hdr->len > rlen) {
+            recv_keep(buf, rlen);
+            return ESP_OK;
         }
         uint32_t rxseq = esp_sip_increase_rxseq();
         if (hdr->seq != rxseq) {
@@ -81,12 +127,7 @@ static esp_err_t handle_intr0(uint32_t intr, uint32_t wait_ms)
             ESP_LOGE(TAG, "%s ERROR!!!", __func__);
         }
 
-        if (hdr->len < rlen) {
-            rlen -= hdr->len;
-        } else {
-            ESP_LOGV(TAG, "rxseq %ld, hdr->sep %ld", rxseq, hdr->seq);
-            break;
-        }
+        rlen -= hdr->len;
         buf += hdr->len;
     }
     return ESP_OK;
@@ -102,10 +143,10 @@ static esp_err_t handle_intr1(uint32_t intr, uint32_t wait_ms)
         size_t rlen = 0;
 
         esp_extconn_sdio_lock();
-        ret = esp_extconn_sdio_get_packet(EXT_CONN_BT_SDIO_FUNC, recv_buf, wanted, &rlen, wait_ms);
+        ret = esp_extconn_sdio_get_packet(EXT_CONN_BT_SDIO_FUNC, recv_dma, wanted, &rlen, wait_ms);
         esp_extconn_sdio_unlock();
         if (ret == ESP_OK) {
-            esp_extconn_trans_bt_recv(recv_buf, rlen);
+            esp_extconn_trans_bt_recv(recv_dma, rlen);
         }
     }
 
@@ -173,8 +214,9 @@ static void trans_recv_task(void *args)
 esp_err_t esp_extconn_trans_recv_init(esp_extconn_config_t *config)
 {
     sdio_mutex = xSemaphoreCreateMutex();
-    recv_buf = heap_caps_calloc(1, RECV_BUF_LEN, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
-    ESP_RETURN_ON_FALSE(recv_buf, ESP_ERR_NO_MEM, TAG, "buffer malloc failed");
+    recv_buf = heap_caps_calloc(1, RECV_BUF_LEN, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    recv_dma = heap_caps_calloc(1, RECV_BUF_LEN, MALLOC_CAP_DMA | MALLOC_CAP_CACHE_ALIGNED);
+    ESP_RETURN_ON_FALSE(recv_buf && recv_dma, ESP_ERR_NO_MEM, TAG, "buffer malloc failed");
 
     esp_err_t ret = xTaskCreatePinnedToCore(trans_recv_task, "trans_recv",
                                             config->recv_task_stack,
